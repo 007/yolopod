@@ -14,14 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /run/sshd
 
-# Install Node.js LTS (for Claude Code)
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Claude Code globally
-RUN npm install -g @anthropic-ai/claude-code
-
 # Rename the default ubuntu user (UID 1000) to coder
 RUN usermod -l coder -d /home/coder -m ubuntu \
     && groupmod -n coder ubuntu
@@ -30,5 +22,11 @@ RUN echo "coder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/coder
 
 USER coder
 WORKDIR /workspace
+
+ENV PATH="/home/coder/.local/bin:${PATH}"
+RUN echo 'export PATH="$HOME/.local/bin:$PATH"' >> /home/coder/.profile
+
+# Install Claude Code (native installer, no Node.js needed)
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 ENTRYPOINT ["sleep", "infinity"]

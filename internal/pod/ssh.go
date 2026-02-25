@@ -37,7 +37,9 @@ sudo /usr/sbin/sshd
 		return fmt.Errorf("sshd setup: %w", err)
 	}
 
-	// Write env vars to SSH environment file so the session inherits them
+	// Write env vars to SSH environment file so the session inherits them.
+	// PATH is handled via ". ~/.profile" in the SSH command since PAM
+	// overrides PATH from .ssh/environment with /etc/environment.
 	if len(envVars) > 0 {
 		var lines []string
 		for _, ev := range envVars {
@@ -130,7 +132,7 @@ func AttachSSH(client *kubernetes.Clientset, restConfig *rest.Config, namespace,
 		"-o", "UserKnownHostsFile=/dev/null",
 		"-o", "LogLevel=ERROR",
 		"coder@127.0.0.1",
-		"cd /workspace && exec claude --dangerously-skip-permissions",
+		". ~/.profile && cd /workspace && exec claude --dangerously-skip-permissions",
 	)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
