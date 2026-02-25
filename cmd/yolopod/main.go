@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,24 +15,31 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "usage: yolopod <config.toml>\n")
+	syncBack := flag.Bool("sync-back", false, "sync git changes back to local workspace after session ends")
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "usage: yolopod [flags] <config.toml>\n\nflags:\n")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	if flag.NArg() < 1 {
+		flag.Usage()
 		os.Exit(1)
 	}
 
-	cfg, err := config.Load(os.Args[1])
+	cfg, err := config.Load(flag.Arg(0))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	if err := run(cfg); err != nil {
+	if err := run(cfg, *syncBack); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func run(cfg *config.Config) error {
+func run(cfg *config.Config, syncBack bool) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -102,9 +110,10 @@ func run(cfg *config.Config) error {
 	}
 	fmt.Printf("session ended\n")
 
-	// Sync git changes back to local workspace
-	if err := yolosync.GitBack(client, restConfig, cfg.Namespace, podName, cfg.Workspace); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: git sync-back failed: %v\n", err)
+	if syncBack {
+		if err := yolosync.GitBack(client, restConfig, cfg.Namespace, podName, cfg.Workspace); err != nil {
+			fmt.Fprintf(os.Stderr, "warning: git sync-back failed: %v\n", err)
+		}
 	}
 
 	return nil
