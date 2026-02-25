@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/007/yolopod/internal/auth"
 	"github.com/007/yolopod/internal/config"
 	"github.com/007/yolopod/internal/pod"
 	yolosync "github.com/007/yolopod/internal/sync"
@@ -42,6 +43,13 @@ func run(cfg *config.Config) error {
 		fmt.Fprintf(os.Stderr, "\nreceived signal, cleaning up...\n")
 		cancel()
 	}()
+
+	// Ensure we have a Claude auth token before creating the pod
+	token, err := auth.EnsureToken()
+	if err != nil {
+		return fmt.Errorf("claude auth: %w", err)
+	}
+	os.Setenv(auth.OAuthTokenEnv, token)
 
 	client, restConfig, err := pod.NewClient(cfg)
 	if err != nil {
@@ -80,6 +88,11 @@ func run(cfg *config.Config) error {
 	// Run setup script if configured
 	if err := pod.RunSetup(client, restConfig, cfg, cfg.Namespace, podName); err != nil {
 		return err
+	}
+
+	// Seed claude config to skip onboarding
+	if err := pod.SeedClaudeConfig(client, restConfig, cfg.Namespace, podName); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not seed claude config: %v\n", err)
 	}
 
 	// Attach to Claude Code session (blocking)

@@ -5,7 +5,7 @@ namespace = "default"
 kubecontext = "kind-yolopod"
 tools = []
 packages = []
-env_vars = ["ANTHROPIC_API_KEY"]
+env_vars = []
 
 [resources]
 cpu = "500m"

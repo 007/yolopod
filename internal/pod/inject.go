@@ -14,6 +14,37 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+func SeedClaudeConfig(client *kubernetes.Clientset, restConfig *rest.Config, namespace, podName string) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	// Create the .claude dir in the container
+	if err := execSimple(client, restConfig, namespace, podName, []string{"mkdir", "-p", "/home/coder/.claude"}); err != nil {
+		return err
+	}
+
+	// Write ~/.claude.json to skip onboarding
+	script := `cat > /home/coder/.claude.json << 'EOF'
+{"hasCompletedOnboarding":true,"autoUpdates":false}
+EOF`
+	if err := execSimple(client, restConfig, namespace, podName, []string{"bash", "-c", script}); err != nil {
+		return fmt.Errorf("writing .claude.json: %w", err)
+	}
+
+	// Copy host settings.json if it exists
+	settingsPath := filepath.Join(home, ".claude", "settings.json")
+	if _, err := os.Stat(settingsPath); err == nil {
+		fmt.Println("injecting claude settings...")
+		if err := copySingleFile(client, restConfig, namespace, podName, settingsPath, "/home/coder/.claude/settings.json"); err != nil {
+			return fmt.Errorf("injecting settings.json: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func InjectFiles(client *kubernetes.Clientset, restConfig *rest.Config, cfg *config.Config, namespace, podName string) error {
 	// Inject workspace
 	workspace, err := filepath.Abs(cfg.Workspace)
@@ -42,20 +73,6 @@ func InjectFiles(client *kubernetes.Clientset, restConfig *rest.Config, cfg *con
 
 		if err := copySingleFile(client, restConfig, namespace, podName, local, cred.Remote); err != nil {
 			return fmt.Errorf("injecting credential %s: %w", cred.Local, err)
-		}
-	}
-
-	// Inject env vars from host environment
-	for _, key := range cfg.EnvVars {
-		val := os.Getenv(key)
-		if val == "" {
-			fmt.Printf("warning: env var %s not set on host, skipping\n", key)
-			continue
-		}
-		// Write to a profile snippet so it persists in the session
-		cmd := fmt.Sprintf("echo 'export %s=%q' >> /home/coder/.bashrc", key, val)
-		if err := execSimple(client, restConfig, namespace, podName, []string{"bash", "-c", cmd}); err != nil {
-			return fmt.Errorf("injecting env var %s: %w", key, err)
 		}
 	}
 

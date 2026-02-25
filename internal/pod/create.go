@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"os"
 
 	"github.com/007/yolopod/internal/config"
 	corev1 "k8s.io/api/core/v1"
@@ -38,13 +39,7 @@ func NewClient(cfg *config.Config) (*kubernetes.Clientset, *rest.Config, error) 
 func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Config) (*corev1.Pod, error) {
 	name := fmt.Sprintf("yolopod-%s", randomSuffix())
 
-	envVars := make([]corev1.EnvVar, 0, len(cfg.EnvVars))
-	for _, key := range cfg.EnvVars {
-		envVars = append(envVars, corev1.EnvVar{
-			Name:  key,
-			Value: "", // placeholder; inject step will set actual values
-		})
-	}
+	envVars := buildEnvVars(cfg.EnvVars)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -82,6 +77,35 @@ func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Confi
 	}
 
 	return created, nil
+}
+
+const oauthTokenEnv = "CLAUDE_CODE_OAUTH_TOKEN"
+
+func buildEnvVars(keys []string) []corev1.EnvVar {
+	var envVars []corev1.EnvVar
+
+	// Always inject CLAUDE_CODE_OAUTH_TOKEN if set on the host
+	if token := os.Getenv(oauthTokenEnv); token != "" {
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  oauthTokenEnv,
+			Value: token,
+		})
+	}
+
+	// Passthrough configured env vars from host
+	for _, key := range keys {
+		val := os.Getenv(key)
+		if val == "" {
+			fmt.Printf("warning: env var %s not set on host, skipping\n", key)
+			continue
+		}
+		envVars = append(envVars, corev1.EnvVar{
+			Name:  key,
+			Value: val,
+		})
+	}
+
+	return envVars
 }
 
 func pullPolicy(s string) corev1.PullPolicy {
