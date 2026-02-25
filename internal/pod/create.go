@@ -39,7 +39,7 @@ func NewClient(cfg *config.Config) (*kubernetes.Clientset, *rest.Config, error) 
 func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Config) (*corev1.Pod, error) {
 	name := fmt.Sprintf("yolopod-%s", randomSuffix())
 
-	envVars := buildEnvVars(cfg.EnvVars)
+	envVars := BuildEnvVars(cfg.EnvVars)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -81,7 +81,7 @@ func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Confi
 
 const oauthTokenEnv = "CLAUDE_CODE_OAUTH_TOKEN"
 
-func buildEnvVars(keys []string) []corev1.EnvVar {
+func BuildEnvVars(keys []string) []corev1.EnvVar {
 	var envVars []corev1.EnvVar
 
 	// Always inject CLAUDE_CODE_OAUTH_TOKEN if set on the host

@@ -29,6 +29,7 @@ type Config struct {
 	Resources       Resources     `toml:"resources"`
 	Credentials     []FileMapping `toml:"credentials"`
 	EnvVars         []string      `toml:"env_vars"`
+	SSHAuthorizedKey string       `toml:"ssh_authorized_key"`
 }
 
 func Load(path string) (*Config, error) {

@@ -110,8 +110,15 @@ func run(cfg *config.Config, syncBack bool) error {
 
 	// Attach to Claude Code session (blocking)
 	fmt.Printf("attaching to claude code in pod %s...\n", podName)
-	if err := pod.Attach(client, restConfig, cfg.Namespace, podName); err != nil {
-		fmt.Fprintf(os.Stderr, "session ended with error: %v\n", err)
+	if cfg.SSHAuthorizedKey != "" {
+		envVars := pod.BuildEnvVars(cfg.EnvVars)
+		if err := pod.AttachSSH(client, restConfig, cfg.Namespace, podName, cfg, envVars); err != nil {
+			fmt.Fprintf(os.Stderr, "session ended with error: %v\n", err)
+		}
+	} else {
+		if err := pod.Attach(client, restConfig, cfg.Namespace, podName); err != nil {
+			fmt.Fprintf(os.Stderr, "session ended with error: %v\n", err)
+		}
 	}
 	fmt.Printf("session ended\n")
 
