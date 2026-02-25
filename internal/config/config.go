@@ -18,16 +18,17 @@ type FileMapping struct {
 }
 
 type Config struct {
-	Workspace   string        `toml:"workspace"`
-	Image       string        `toml:"image"`
-	Namespace   string        `toml:"namespace"`
-	Kubecontext string        `toml:"kubecontext"`
-	SetupScript string        `toml:"setup_script"`
-	Tools       []string      `toml:"tools"`
-	Packages    []string      `toml:"packages"`
-	Resources   Resources     `toml:"resources"`
-	Credentials []FileMapping `toml:"credentials"`
-	EnvVars     []string      `toml:"env_vars"`
+	Workspace       string        `toml:"workspace"`
+	Image           string        `toml:"image"`
+	ImagePullPolicy string        `toml:"image_pull_policy"`
+	Namespace       string        `toml:"namespace"`
+	Kubecontext     string        `toml:"kubecontext"`
+	SetupScript     string        `toml:"setup_script"`
+	Tools           []string      `toml:"tools"`
+	Packages        []string      `toml:"packages"`
+	Resources       Resources     `toml:"resources"`
+	Credentials     []FileMapping `toml:"credentials"`
+	EnvVars         []string      `toml:"env_vars"`
 }
 
 func Load(path string) (*Config, error) {

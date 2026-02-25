@@ -1,20 +1,12 @@
 workspace = "."
 image = "ghcr.io/007/yolopod-base:latest"
+image_pull_policy = "Never"
 namespace = "default"
 kubecontext = "kind-yolopod"
-setup_script = ""
-tools = ["go", "node"]
+tools = []
 packages = []
 env_vars = ["ANTHROPIC_API_KEY"]
 
 [resources]
-cpu = "2"
-memory = "4Gi"
-
-[[credentials]]
-local = "~/.aws/credentials"
-remote = "/home/coder/.aws/credentials"
-
-[[credentials]]
-local = "~/.gitconfig"
-remote = "/home/coder/.gitconfig"
+cpu = "500m"
+memory = "512Mi"

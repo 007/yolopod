@@ -19,8 +19,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # Install Claude Code globally
 RUN npm install -g @anthropic-ai/claude-code
 
-# Create non-root user
-RUN useradd -m -s /bin/bash -u 1000 coder
+# Rename the default ubuntu user (UID 1000) to coder
+RUN usermod -l coder -d /home/coder -m ubuntu \
+    && groupmod -n coder ubuntu
 RUN mkdir -p /workspace && chown coder:coder /workspace
 
 USER coder

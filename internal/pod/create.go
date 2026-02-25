@@ -58,8 +58,9 @@ func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Confi
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{
 				{
-					Name:  "sandbox",
-					Image: cfg.Image,
+					Name:            "sandbox",
+					Image:           cfg.Image,
+					ImagePullPolicy: pullPolicy(cfg.ImagePullPolicy),
 					Resources: corev1.ResourceRequirements{
 						Requests: corev1.ResourceList{
 							corev1.ResourceCPU:    resource.MustParse(cfg.Resources.CPU),
@@ -81,6 +82,19 @@ func Create(ctx context.Context, client *kubernetes.Clientset, cfg *config.Confi
 	}
 
 	return created, nil
+}
+
+func pullPolicy(s string) corev1.PullPolicy {
+	switch s {
+	case "Always":
+		return corev1.PullAlways
+	case "Never":
+		return corev1.PullNever
+	case "IfNotPresent":
+		return corev1.PullIfNotPresent
+	default:
+		return corev1.PullIfNotPresent
+	}
 }
 
 func randomSuffix() string {
