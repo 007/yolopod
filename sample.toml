@@ -3,7 +3,6 @@ image = "ghcr.io/007/yolopod-base:latest"
 image_pull_policy = "Never"
 namespace = "default"
 kubecontext = "kind-yolopod"
-tools = []
 packages = []
 env_vars = ["COLORTERM"]
 ssh_authorized_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKfj1F3Lh9nA0cDjIK0/Iy4UQ815GliX9FvpR/YcXhta github.com/007"

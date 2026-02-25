@@ -98,6 +98,11 @@ func run(cfg *config.Config, syncBack bool) error {
 		return err
 	}
 
+	// Install additional packages
+	if err := pod.InstallPackages(client, restConfig, cfg.Namespace, podName, cfg.Packages); err != nil {
+		return err
+	}
+
 	// Seed claude config to skip onboarding
 	if err := pod.SeedClaudeConfig(client, restConfig, cfg.Namespace, podName); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: could not seed claude config: %v\n", err)

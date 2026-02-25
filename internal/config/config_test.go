@@ -12,7 +12,7 @@ workspace = "/tmp/project"
 image = "custom:v1"
 namespace = "dev"
 kubecontext = "kind-test"
-tools = ["go"]
+packages = ["ripgrep"]
 env_vars = ["API_KEY"]
 
 [resources]

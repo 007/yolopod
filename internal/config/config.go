@@ -24,7 +24,6 @@ type Config struct {
 	Namespace       string        `toml:"namespace"`
 	Kubecontext     string        `toml:"kubecontext"`
 	SetupScript     string        `toml:"setup_script"`
-	Tools           []string      `toml:"tools"`
 	Packages        []string      `toml:"packages"`
 	Resources       Resources     `toml:"resources"`
 	Credentials     []FileMapping `toml:"credentials"`
