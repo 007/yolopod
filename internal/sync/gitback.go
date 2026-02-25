@@ -79,20 +79,6 @@ func tarFromPod(client *kubernetes.Clientset, restConfig *rest.Config, namespace
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 
-	// First commit any uncommitted changes so they survive the transfer
-	pod.ExecWithConfig(client, restConfig, pod.ExecOptions{
-		Namespace: namespace,
-		PodName:   podName,
-		Container: "sandbox",
-		Command: []string{"bash", "-c", `cd /workspace &&
-			git add -A &&
-			if ! git diff --cached --quiet; then
-				git commit -m "yolopod: uncommitted changes from sandbox session"
-			fi`},
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	})
-
 	// Tar up the entire workspace (includes .git and working tree)
 	err := pod.ExecWithConfig(client, restConfig, pod.ExecOptions{
 		Namespace: namespace,

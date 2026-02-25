@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -194,6 +195,30 @@ func execSimple(client *kubernetes.Clientset, restConfig *rest.Config, namespace
 		Command:   command,
 		Stderr:    os.Stderr,
 	})
+}
+
+func SeedGitConfig(client *kubernetes.Clientset, restConfig *rest.Config, namespace, podName, workspace string) error {
+	name := localGitConfig(workspace, "user.name")
+	email := localGitConfig(workspace, "user.email")
+	if name == "" {
+		name = "yolopod"
+	}
+	if email == "" {
+		email = "yolopod@localhost"
+	}
+
+	script := fmt.Sprintf(`git config --global user.name %q && git config --global user.email %q`, name, email)
+	return execSimple(client, restConfig, namespace, podName, []string{"bash", "-c", script})
+}
+
+func localGitConfig(dir, key string) string {
+	cmd := exec.Command("git", "config", key)
+	cmd.Dir = dir
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
 
 func expandHome(path string) string {

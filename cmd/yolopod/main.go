@@ -103,6 +103,11 @@ func run(cfg *config.Config, syncBack bool) error {
 		fmt.Fprintf(os.Stderr, "warning: could not seed claude config: %v\n", err)
 	}
 
+	// Seed git user config from host
+	if err := pod.SeedGitConfig(client, restConfig, cfg.Namespace, podName, cfg.Workspace); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not seed git config: %v\n", err)
+	}
+
 	// Attach to Claude Code session (blocking)
 	fmt.Printf("attaching to claude code in pod %s...\n", podName)
 	if err := pod.Attach(client, restConfig, cfg.Namespace, podName); err != nil {
